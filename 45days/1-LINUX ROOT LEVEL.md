@@ -334,6 +334,9 @@ Reply me:
 Main wahin ghus jaunga 😈🧠
 
 -------------------------------------------------------------------------------------------------------------------------
+
+
+```bash
 controlplane ~ ➜  uname -a
 Linux controlplane 5.15.0-1083-gcp #92~20.04.1-Ubuntu SMP Tue Apr 29 09:12:55 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
 
@@ -399,3 +402,6 @@ Swap:              0           0           0
 controlplane ~ ➜  
 
 controlplane ~ ➜  
+
+
+```
