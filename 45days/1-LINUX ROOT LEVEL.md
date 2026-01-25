@@ -1,270 +1,194 @@
-# 🩸 DAY 1 — LINUX FROM ROOT (DEEP VERSION)
+# 🩸 DAY 1 — LINUX ROOT HANDS-ON (WITH EXPLANATION)
+
+> 🎯 **Goal:**
+> Tum apni aankhon se dekho:
+
+* process kaise banta hai
+* CPU kaise share hota hai
+* memory kaise jhooth bolti hai
 
 ---
 
-## 🧠 PART 1 — OPERATING SYSTEM ACTUALLY HAI KYA?
-
-Most log bolte hain:
-
-> “Linux ek OS hai”
-
-❌ Galat (incomplete).
-
-### ✅ Sach:
-
-**Operating System = Kernel + Userland tools**
-
-* **Kernel** → boss (hardware control)
-* **Userland** → tools (`ls`, `ps`, `bash`, `systemctl`)
-
-Tum terminal me jo kuch bhi karte ho:
-👉 **Kernel ke bina kuch nahi hota**
-
----
-
-## 🧠 PART 2 — KERNEL DEEP UNDERSTANDING
-
-### Kernel kya karta hai?
-
-Kernel ke paas 4 superpowers hain:
-
-### 1️⃣ CPU CONTROL (Scheduler)
-
-CPU ek hi time pe:
-
-* hazaar processes ko “chalata” hua lagta hai
-  Par reality:
-* CPU ek time pe **sirf ek instruction**
-
-Kernel:
-
-* process A ko 2 ms
-* process B ko 2 ms
-* switch, switch, switch ⚡
-
-👉 Isse kehte hain **context switching**
-
----
-
-### 2️⃣ MEMORY CONTROL (Yahan aadhe log mar jaate hain)
-
-Tumhari app bole:
-
-> “Mujhe 1GB RAM chahiye”
-
-Kernel bole:
-
-> “Le, par ye *virtual* hai”
-
-#### Virtual Memory:
-
-* App sochti hai uske paas full RAM hai
-* Kernel actual RAM manage karta hai
-
-Isliye:
-
-* RSS ≠ VIRT
-* Free RAM ≠ unused RAM
-
----
-
-### 3️⃣ PROCESS CONTROL
-
-Kernel decide karta hai:
-
-* kaunsa process zinda
-* kaunsa wait kare
-* kaunsa mare (OOM killer 😈)
-
----
-
-### 4️⃣ HARDWARE ACCESS
-
-Disk, NIC, CPU, RAM
-👉 **sirf kernel touch kar sakta hai**
-
-App → syscall → kernel → driver → hardware
-
----
-
-## 🧠 PART 3 — PROGRAM vs PROCESS (CRITICAL)
-
-### Program:
-
-* Disk pe pada hua file
-* Dead
-* Koi CPU nahi
-* Koi RAM nahi
-
-Example:
+## 🧪 LAB 0 — SYSTEM PEHCHAANO (5 min)
 
 ```bash
-ls -l /bin/ls
+uname -a
 ```
+
+🧠 **Explanation:**
+Ye command kernel se poochti hai:
+
+> “Tu kaun hai? Kaunsa version? Kaise build hua?”
 
 ---
 
-### Process:
-
-* Program + RAM + CPU context
-* Alive
-* PID hota hai
-
-Example:
-
 ```bash
-ls
+lscpu
 ```
 
-👆 Ye command:
+🧠 CPU ki physical reality:
 
-1. Bash ne fork kiya
-2. Child process bana
-3. Exec hua `/bin/ls`
-4. Output diya
-5. Exit
+* cores
+* threads
+* architecture
 
 ---
-
-## 🧠 PART 4 — PROCESS LIFE CYCLE (ROOT)
-
-```
-New → Ready → Running → Waiting → Terminated
-```
-
-### Fork & Exec kya hai?
-
-* `fork()` → copy of process
-* `exec()` → program replace
-
-Isliye:
-
-* Bash zinda rehta hai
-* Command alag process me chalti hai
-
----
-
-## 🛠️ PRACTICAL 1 — PROCESS KO ZINDA DEKHO
-
-```bash
-sleep 300 &
-echo $!
-```
-
-Ab:
-
-```bash
-ps -o pid,ppid,stat,cmd -p <PID>
-```
-
-### Fields samjho:
-
-* PID → process id
-* PPID → parent
-* STAT:
-
-  * R → running
-  * S → sleeping
-  * D → uninterruptible
-  * Z → zombie ☠️
-
----
-
-## 🧠 PART 5 — CPU DEEP TRUTH
-
-### CPU 100% ka matlab?
-
-❌ CPU busy = system slow (always)
-✅ CPU busy = **scheduler under pressure**
-
-### Load Average:
-
-```bash
-uptime
-```
-
-Load =
-
-> running + waiting processes (not CPU usage!)
-
-Example:
-
-* 2 core system
-* Load = 4
-  👉 2 processes waiting = latency
-
----
-
-## 🛠️ PRACTICAL 2 — CPU TORTURE
-
-```bash
-yes > /dev/null &
-yes > /dev/null &
-```
-
-Observe:
-
-```bash
-top
-uptime
-```
-
-Samjho:
-
-* CPU % vs load difference
-* Context switching increase
-
-Cleanup:
-
-```bash
-killall yes
-```
-
----
-
-## 🧠 PART 6 — MEMORY (SABSE ZYADA CONFUSION)
-
-### RAM ka rule:
-
-> **Empty RAM = wasted RAM**
-
-Kernel RAM use karta hai:
-
-* cache
-* buffers
-* slab
-
-Isliye:
 
 ```bash
 free -m
 ```
 
-Dekho:
+🧠 Memory ka **marketing vs reality**:
 
-* used
-* free
-* buff/cache
-* available (IMPORTANT)
+* `used` ≠ actually used
+* `available` = real truth
 
----
-
-### Swap kyun hota hai?
-
-* RAM limited hai
-* Kernel rarely used pages disk pe daal deta hai
-* RAM free karta hai for active processes
-
-Swap ≠ bad
-Swap abuse = bad
+✍️ **Likho:** kernel version, cores, RAM
 
 ---
 
-## 🛠️ PRACTICAL 3 — MEMORY PRESSURE
+## 🧪 LAB 1 — PROGRAM vs PROCESS (MOST IMPORTANT)
+
+### Step 1: Program dekho (dead cheez)
+
+```bash
+ls -l /bin/sleep
+```
+
+🧠 Explanation:
+
+* Ye sirf disk pe file hai
+* CPU use nahi
+* RAM use nahi
+
+---
+
+### Step 2: Process banao (zinda cheez)
+
+```bash
+sleep 300 &
+```
+
+```bash
+echo $!
+```
+
+🧠 Explanation:
+
+* `sleep` RAM me gaya
+* PID mila
+* Kernel ne entry process table me banayi
+
+---
+
+### Step 3: Process anatomy dekho
+
+```bash
+ps -o pid,ppid,stat,cmd -p <PID>
+```
+
+🧠 Explanation:
+
+* PID → process ki identity
+* PPID → parent (bash)
+* STAT:
+
+  * `S` = sleeping (waiting state)
+
+---
+
+## 🧪 LAB 2 — PROCESS TREE (RELATIONSHIP)
+
+```bash
+pstree -p
+```
+
+🧠 Explanation:
+
+* Kernel har process ka parent maintain karta hai
+* Orphan hone pe parent = PID 1 (systemd)
+
+🎯 **ROOT REALITY:**
+Production me orphan processes memory leak karte hain.
+
+---
+
+## 🧪 LAB 3 — CPU TORTURE (REALITY CHECK)
+
+### Step 1: CPU khana start
+
+```bash
+yes > /dev/null &
+yes > /dev/null &
+```
+
+🧠 Explanation:
+
+* `yes` infinite loop
+* CPU continuously instructions execute kar raha
+
+---
+
+### Step 2: Observe
+
+```bash
+top
+```
+
+Focus on:
+
+* `%us` → user space CPU
+* `%sy` → kernel space CPU
+* `id` → idle
+
+---
+
+```bash
+uptime
+```
+
+🧠 Explanation:
+
+* Load average ≠ CPU usage
+* Load = running + waiting processes
+
+---
+
+### Step 3: Cleanup
+
+```bash
+killall yes
+```
+
+🧠 Kernel ne context switch kam kar diya → system normal
+
+---
+
+## 🧪 LAB 4 — MEMORY TRUTH (JHOOTH PAKDO)
+
+```bash
+free -m
+```
+
+🧠 Explanation:
+
+* Kernel RAM ko cache ke liye use karta hai
+* Cache = future speed
+
+---
+
+### Pressure daalo
 
 ```bash
 stress --vm 1 --vm-bytes 70% --vm-keep
 ```
+
+🧠 Explanation:
+
+* Artificial memory pressure
+* Kernel forced to choose: cache drop ya swap
+
+---
 
 Observe:
 
@@ -272,10 +196,12 @@ Observe:
 vmstat 1
 ```
 
-Fields:
+🧠 Fields:
 
-* si → swap in
-* so → swap out
+* `si` = swap in
+* `so` = swap out
+
+---
 
 Cleanup:
 
@@ -285,53 +211,41 @@ pkill stress
 
 ---
 
-## 🧠 PART 7 — ZOMBIE PROCESS (PROD KA BHOOT)
+## 🧪 LAB 5 — /proc (KERNEL KI LIVE AANKH)
 
-Zombie:
+```bash
+ls /proc
+```
 
-* Process mar chuka
-* Entry process table me abhi hai
-* Parent ne `wait()` nahi kiya
+🧠 Explanation:
 
-Danger:
-
-* Process table full
-* New processes fail
+* Ye real files nahi
+* Kernel runtime info expose karta hai
 
 ---
 
-## 🧠 FINAL ROOT QUESTIONS (LIKHO)
+```bash
+cat /proc/<PID>/status
+```
 
-Ye skip kiya toh training fail:
+🧠 Dekho:
 
-1. Program aur process me exact difference?
-2. Kernel ke bina Docker kyun impossible hai?
-3. Load average CPU % se zyada important kyun hai?
-4. Swap hone ke baad bhi system responsive kyun rehta hai?
-5. Zombie process ka real prod impact kya hai?
-
----
-
-## 🎯 DAY 1 KA REAL OUTCOME
-
-Agar tum ye samajh gaye:
-
-* Kubernetes crash samajh aayega
-* Pod OOMKill logic clear hoga
-* “system slow hai” bolne ke bajaye **reason doge**
+* State
+* Memory
+* Threads
 
 ---
 
-🔥 **Next (DAY 2):**
-**Networking from ROOT**
-👉 packet → NIC → kernel → socket → process
+## 🧠 FINAL THINKING (VERY IMPORTANT)
 
-Reply me:
+✍️ Answer likho:
 
-* Root questions ke answers (short)
-* Ek line: *“abhi bhi sabse zyada confusion kahan hai”*
+1. Program aur process ka difference tumne kaise dekha?
+2. CPU free hone ke baad bhi load kyun high ho sakta hai?
+3. Swap hone ka matlab system fail ho gaya?
+4. `/proc` ko edit kyun nahi kar sakte?
 
-Main wahin ghus jaunga 😈🧠
+---
 
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -805,6 +719,108 @@ systemd(1)─┬─containerd(904)─┬─{containerd}(915)
            ├─systemd-logind(889)
            └─systemd-udevd(418)
 
-controlplane ~ ✦ ➜  
+controlplane ~ ✦ ➜ top
+top - 06:35:02 up 0 min,  2 users,  load average: 5.53, 6.16, 5.14
+Tasks:  66 total,   3 running,  63 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 13.1 us,  8.7 sy,  0.0 ni, 77.4 id,  0.0 wa,  0.0 hi,  0.8 si,  0.0 st
+MiB Mem :  64295.2 total,   1069.6 free,  14547.6 used,  48678.1 buff/cache
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.  48783.8 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                                                  
+  68079 root      20   0    6088   1116   1024 R 100.0   0.0   0:38.60 yes                                                                      
+  68101 root      20   0    6088   1020    928 R 100.0   0.0   0:37.47 yes                                                                      
+   2719 root      20   0 1583576 340416  70184 S  1600   0.5   3:49.14 kube-apiserver                                                           
+  43084 root      20   0   17272   5516   3700 S 100.0   0.0   0:36.29 systemd                                                                  
+      1 root      20   0  166712   9136   5304 S 100.0   0.0   1:21.57 systemd                                                                  
+   2726 root      20   0   11.2g  70872  27128 S  1400   0.1   2:01.58 etcd
+
+controlplane ~ ➜  free -m
+               total        used        free      shared  buff/cache   available
+Mem:           64295       14528        1073         247       48693       48803
+Swap:              0           0           0
+
+controlplane ~ ➜
+controlplane ~ ✖ stress --vm 1 --vm-bytes 40G --vm-keep
+stress: info: [73438] dispatching hogs: 0 cpu, 0 io, 1 vm, 0 hdd
+stress: FAIL: [73438] (416) <-- worker 73439 got signal 9
+stress: WARN: [73438] (418) now reaping child worker processes
+stress: FAIL: [73438] (452) failed run completed in 14s
+
+controlplane ~ ✖ pkill strees
+
+controlplane ~ ➜  ls /proc
+1     2305  3766   43085  4716  6778   903         consoles       filesystems  kmsg         mounts        softirqs       version
+1263  2317  3797   43133  4717  6878   904         cpuinfo        fs           kpagecgroup  mtrr          stat           version_signature
+1273  2719  3915   43393  4718  6982   905         crypto         interrupts   kpagecount   net           swaps          vmallocinfo
+190   2726  418    43397  4719  7076   908         devices        iomem        kpageflags   pagetypeinfo  sys            vmstat
+2138  2728  43059  43398  4720  7775   acpi        diskstats      ioports      loadavg      partitions    sysrq-trigger  zoneinfo
+2153  2731  43061  43399  4721  7785   bootconfig  dma            irq          locks        pressure      sysvipc
+2166  3387  43062  43400  4722  78127  buddyinfo   driver         kallsyms     mdstat       schedstat     thread-self
+2172  3591  43063  43401  4902  830    bus         dynamic_debug  kcore        meminfo      scsi          timer_list
+2288  3619  43064  4618   6491  8648   cgroups     execdomains    keys         misc         self          tty
+2289  3717  43084  4715   6656  889    cmdline     fb             key-users    modules      slabinfo      uptime
+
+controlplane ~ ➜  cat /proc/1/status
+Name:   systemd
+Umask:  0000
+State:  S (sleeping)
+Tgid:   1
+Ngid:   0
+Pid:    1
+PPid:   0
+TracerPid:      0
+Uid:    0       0       0       0
+Gid:    0       0       0       0
+FDSize: 128
+Groups: 0 
+NStgid: 1
+NSpid:  1
+NSpgid: 1
+NSsid:  1
+VmPeak:   231964 kB
+VmSize:   166712 kB
+VmLck:         0 kB
+VmPin:         0 kB
+VmHWM:     12344 kB
+VmRSS:      8784 kB
+RssAnon:            3832 kB
+RssFile:            4952 kB
+RssShmem:              0 kB
+VmData:    18928 kB
+VmStk:      1036 kB
+VmExe:       896 kB
+VmLib:      9056 kB
+VmPTE:       100 kB
+VmSwap:        0 kB
+HugetlbPages:          0 kB
+CoreDumping:    0
+THP_enabled:    1
+Threads:        1
+SigQ:   1/257146
+SigPnd: 0000000000000000
+ShdPnd: 0000000000000000
+SigBlk: 7be3c0fe28014a03
+SigIgn: 0000000000001000
+SigCgt: 00000001000004ec
+CapInh: 000001ffffffffff
+CapPrm: 000001ffffffffff
+CapEff: 000001ffffffffff
+CapBnd: 000001ffffffffff
+CapAmb: 000001ffffffffff
+NoNewPrivs:     0
+Seccomp:        2
+Seccomp_filters:        1
+Speculation_Store_Bypass:       thread force mitigated
+SpeculationIndirectBranch:      conditional force disabled
+Cpus_allowed:   ffff
+Cpus_allowed_list:      0-15
+Mems_allowed:   00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001
+Mems_allowed_list:      0
+voluntary_ctxt_switches:        2837027
+nonvoluntary_ctxt_switches:     30092
+
+controlplane ~ ➜  
+
+controlplane ~ ➜              
 
 ```
